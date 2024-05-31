@@ -33,6 +33,16 @@ const Index = () => {
     }
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (location) {
+        handleSearch();
+      }
+    }, 600000); // Fetch data every 10 minutes
+
+    return () => clearInterval(interval);
+  }, [location]);
+
   return (
     <Container maxW="container.xl" p={4}>
       <Flex as="nav" bg="blue.500" color="white" p={4} align="center">
