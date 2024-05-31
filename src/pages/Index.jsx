@@ -1,24 +1,35 @@
 import { Box, Container, Flex, Heading, Input, SimpleGrid, Text, VStack } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Index = () => {
   const [location, setLocation] = useState("");
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState(null);
+  const [apiKey, setApiKey] = useState("YOUR_API_KEY");
+  const [apiUrl, setApiUrl] = useState("https://api.openweathermap.org/data/2.5");
+  const [forecast, setForecast] = useState([]);
 
   const handleSearch = async () => {
     try {
-      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=YOUR_API_KEY`);
-      if (!response.ok) {
+      const currentWeatherResponse = await fetch(`${apiUrl}/weather?q=${location}&units=metric&appid=${apiKey}`);
+      if (!currentWeatherResponse.ok) {
         throw new Error("Location not found");
       }
-      const data = await response.json();
-      setWeather(data);
+      const currentWeatherData = await currentWeatherResponse.json();
+      setWeather(currentWeatherData);
       setError(null);
+
+      const forecastResponse = await fetch(`${apiUrl}/forecast?q=${location}&units=metric&appid=${apiKey}`);
+      if (!forecastResponse.ok) {
+        throw new Error("Forecast data not available");
+      }
+      const forecastData = await forecastResponse.json();
+      setForecast(forecastData.list);
     } catch (error) {
       console.error(error);
       setError("Location not found");
       setWeather(null);
+      setForecast([]);
     }
   };
 
@@ -57,21 +68,13 @@ const Index = () => {
         <Box>
           <Heading size="lg">Weather Forecast</Heading>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mt={4}>
-            <Box borderWidth="1px" borderRadius="md" p={4}>
-              <Text fontSize="lg" fontWeight="bold">Day 1</Text>
-              <Text>Weather: Clear</Text>
-              <Text>Temperature: 25°C</Text>
-            </Box>
-            <Box borderWidth="1px" borderRadius="md" p={4}>
-              <Text fontSize="lg" fontWeight="bold">Day 2</Text>
-              <Text>Weather: Cloudy</Text>
-              <Text>Temperature: 22°C</Text>
-            </Box>
-            <Box borderWidth="1px" borderRadius="md" p={4}>
-              <Text fontSize="lg" fontWeight="bold">Day 3</Text>
-              <Text>Weather: Rainy</Text>
-              <Text>Temperature: 18°C</Text>
-            </Box>
+            {forecast.map((item, index) => (
+              <Box key={index} borderWidth="1px" borderRadius="md" p={4}>
+                <Text fontSize="lg" fontWeight="bold">{`Day ${index + 1}`}</Text>
+                <Text>Weather: {item.weather[0].description}</Text>
+                <Text>Temperature: {item.main.temp}°C</Text>
+              </Box>
+            ))}
           </SimpleGrid>
         </Box>
       </VStack>
